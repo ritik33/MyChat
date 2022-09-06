@@ -34,6 +34,7 @@ urlpatterns = [
     path('', home_screen_view, name='home'),
     path('account/', include('account.urls', namespace='account')),
     path('friend/', include('friend.urls', namespace='friend')),
+    path('chat/', include('chat.urls', namespace='chat')),
     path('register/', register_view, name="register"),
     path('login/', login_view, name="login"),
     path('logout/', logout_view, name="logout"),
