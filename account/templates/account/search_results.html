@@ -66,7 +66,8 @@
 					<div class="card-center px-2">
 						<h4 class="card-title">{{account.0.username}}</h4>
 						{% if account.1 %}
-						<p class="card-text"><a href="#">Send a Message</a></p>
+						<p class="card-text"><a href="{% url 'chat:chatroom' account.0.username %}">Send a
+								Message</a></p>
 						{% endif %}
 
 					</div>

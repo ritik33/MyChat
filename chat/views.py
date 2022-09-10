@@ -19,7 +19,7 @@ class ChatRoomView(View):
         try:
             chat_room = ChatRoom.objects.get(
                 (Q(user1=me) & Q(user2=friend)) | (Q(user1=friend) & Q(user2=me)))
-            return Message.objects.order_by('timestamp').filter(ChatRoom=chat_room)
+            return Message.objects.order_by('-timestamp').filter(chat_room=chat_room)
         except:
             return None
 

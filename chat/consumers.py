@@ -52,7 +52,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             {
                 'type': 'chatroom.message',
                 'user': message.from_user,
-                "profile_image": self.scope["user"].profile_image.url,
+                "profile_image": self.scope["user"].profile_image,
                 'message': message.content
             }
         )

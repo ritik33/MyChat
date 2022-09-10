@@ -1,0 +1,239 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+
+<style type="text/css">
+	.chat-log {
+		height: 500px;
+		overflow-x: hidden;
+		overflow-y: auto;
+		padding: 10px;
+		background-color: #fff;
+		font-size: 0.9em;
+		flex-direction: column-reverse;
+	}
+
+	.chat-message-input-container {
+		outline: none;
+		box-shadow: none;
+	}
+
+	.chat-message-input {
+		outline: none;
+		border: 1px solid #fff;
+		border-top: 2px solid var(--main-background-color);
+
+	}
+
+	.message-container {
+		margin-top: 10px;
+		justify-content: start;
+	}
+
+	.username-span {
+		font-weight: 600;
+		margin-top: 0px;
+		margin-bottom: auto;
+		margin-left: 5px;
+		margin-right: 5px;
+	}
+
+	.friend-message-span {
+		font-weight: 380;
+		margin-top: 0px;
+		margin-bottom: auto;
+		margin-left: 5px;
+		margin-right: 5px;
+		font-size: 0.6em;
+		color: var(--light-primary-text-color);
+	}
+
+	.timestamp-span {
+		font-weight: 400;
+		font-size: 0.8em;
+		color: var(--secondary-text-color);
+	}
+
+	.timestamp-span:hover {
+		cursor: pointer;
+	}
+
+	.msg-p {
+		font-weight: 450;
+		margin-top: 5px;
+		margin-bottom: auto;
+		margin-left: 5px;
+		margin-right: 5px;
+		white-space: normal;
+		-ms-word-break: break-all;
+		word-break: break-all;
+	}
+
+	.profile-image {
+		width: 33px;
+		height: 33px;
+		margin-top: 0px;
+		margin-bottom: auto;
+	}
+
+	.profile-image-small {
+		width: 25px;
+		height: 25px;
+		margin-top: 0px;
+		margin-bottom: auto;
+		margin-right: 5px;
+	}
+
+	.profile-image:hover {
+		cursor: pointer;
+	}
+
+	.profile-image-small:hover {
+		cursor: pointer;
+	}
+
+	.username-span:hover {
+		cursor: pointer;
+	}
+
+	.material-icons:hover {
+		cursor: pointer;
+	}
+
+	.card {
+		border-radius: 12px;
+	}
+
+	#id_chatroom_loading_spinner {
+		position: absolute;
+	}
+
+	.friend-container:hover {
+		background: var(--main-background-color);
+		cursor: pointer;
+	}
+
+	.friends-list-container {
+		max-height: 500px;
+		overflow-y: scroll;
+	}
+
+	a:hover {
+		text-decoration: none;
+	}
+</style>
+
+
+<div class="container">
+	<div class="row">
+		<div class="col-sm-9 m-0 p-2">
+			<div class="card" id="id_chatroom_card">
+				<div class="d-flex flex-row align-items-center card-header" id="id_room_title">
+					<a class="d-flex flex-row" target="_blank" id="id_user_info_container"
+						href="{% url 'account:view' friend.id %}">
+						<img class="profile-image rounded-circle img-fluid" id="id_other_user_profile_image"
+							src="{{ friend.profile_image }}">
+						<h3 class="ml-2" id="id_other_username">{{ friend.username }}</h3>
+					</a>
+				</div>
+				<div class="card-body p-1">
+					<div class="d-flex flex-column" id="id_chat_log_container">
+						<div class="d-flex chat-log" id="id_chat_log">
+							{% for chat in chats %}
+							<div class="d-flex flex-row message-container">
+								<img class="profile-image rounded-circle img-fluid" id="chat-profile"
+									src="{% static 'img/dummy_image.png' %}">
+								<div class="d-flex flex-column">
+									<div class="d-flex flex-row">
+										<span class="username-span">{{ chat.from_user }}</span>
+									</div>
+									<p class="msg-p">{{ chat.content }}</p>
+								</div>
+							</div>
+							{% endfor %}
+						</div>
+						<div class="d-flex flex-row chat-message-input-container">
+							<textarea class="flex-grow-1 chat-message-input" id="id_chat_message_input"></textarea>
+							<button class="btn btn-primary chat-message-submit-button">
+								<span id="id_chat_message_submit" class="material-icons">send
+								</span>
+							</button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- Safely outputs a Python object as JSON, wrapped in a <script> tag, ready for use with JavaScript. -->
+{{ me|json_script:"me" }}
+{{ friend|json_script:"friend" }}
+
+<script type="text/javascript">
+	const me = JSON.parse(document.getElementById('me').textContent);
+	const friend = JSON.parse(document.getElementById('friend').textContent);
+
+	/* connection request */
+	const chatSocket = new WebSocket(
+		'ws://' + window.location.host + '/ws/chat/' + friend['username'] + '/'
+	);
+
+	chatSocket.onopen = function (event) {
+		console.log('Chatroom socket connected');
+	}
+
+	chatSocket.onmessage = function (event) {
+		const data = JSON.parse(event.data);
+		var chat_list = document.querySelector('#id_chat_log');
+
+		var newMessageDiv = document.createElement("div")
+		newMessageDiv.classList.add("d-flex")
+		newMessageDiv.classList.add("flex-row")
+		newMessageDiv.classList.add("message-container")
+
+		var profileImage = document.createElement("img")
+		profileImage.classList.add("profile-image")
+		profileImage.classList.add("rounded-circle")
+		profileImage.classList.add("img-fluid")
+		profileImage.src = data.user['profile_image']
+		newMessageDiv.appendChild(profileImage)
+
+		var div1 = document.createElement("div")
+		div1.classList.add("d-flex")
+		div1.classList.add("flex-column")
+
+		var div2 = document.createElement("div")
+		div2.classList.add("d-flex")
+		div2.classList.add("flex-row")
+
+		var usernameSpan = document.createElement("span")
+		usernameSpan.innerHTML = data.user['username']
+		usernameSpan.classList.add("username-span")
+		div2.appendChild(usernameSpan)
+
+		div1.appendChild(div2)
+
+		var msgP = document.createElement("p")
+		msgP.innerHTML = data.message
+		msgP.classList.add("msg-p")
+		div1.appendChild(msgP)
+
+		newMessageDiv.appendChild(div1)
+		chat_list.insertBefore(newMessageDiv, chat_list.firstChild)
+	}
+
+	/* send a message*/
+	document.getElementById('id_chat_message_submit').onclick = function (e) {
+		const msg = document.getElementById('id_chat_message_input').value;
+		chatSocket.send(JSON.stringify({
+			'message': msg,
+			'user': me,
+			'friend': friend
+		}));
+		document.getElementById('id_chat_message_input').value = "";
+	};
+</script>
+
+{% endblock content %}
